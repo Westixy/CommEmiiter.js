@@ -1,6 +1,6 @@
 /* Created by Esteban Sotillo <westixy@gmail.com>
       Name : CommEmmiter
-      Version : 0.1.0
+      Version : 0.1.1
       date : 18.11.2016
 */
 
@@ -21,8 +21,6 @@
  * à qui l'on veut envoyer un emit. (emit(who,what[,arg])) (arg est une seule
  * variable)
  *
- * NB : éviter les fonctions anonymes dans les .on, il n'est pas possible de
- *      faire des .off après si elles n'ont pas de nom (à améliorer :) )
  *
  * ENJOY IT ;)
  * Westixy
@@ -77,14 +75,21 @@ function CommEmmiter(id,recive,send){
   }
   this.on=function(action,callback){
     if(typeof that.actions[action]=="undefined")that.actions[action]=[];
-    if(that.actions[action].indexOf(callback)<0)
+    if(!that.exist(callback))
       that.actions[action].push(callback);
   }
   this.off=function(action,callback){
     if(typeof that.actions[action]=="undefined") return;
-    var index = that.actions[action].indexOf(callback);
-    if(index>-1)
+    if(that.exist(callback))
       that.actions[action].splice(index,1);
+  }
+
+  this.exist(action,callback){
+    for(var i=0; i<that.actions[action].length;i++){
+      if(that.actions[action][i].toString()===callback.toString())
+        return true;
+    }
+    return false;
   }
 
   this.onRep=function(ev){
@@ -102,4 +107,4 @@ function CommEmmiter(id,recive,send){
     that.r.addEventListener('DOMSubtreeModified',that.onRep);
   }
 }
-CommEmmiter.version='0.1.0';
+CommEmmiter.version='0.1.1';
