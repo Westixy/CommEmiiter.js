@@ -1,7 +1,7 @@
 /* Created by Esteban Sotillo <westixy@gmail.com>
-      Name : CommEmmiter
-      Version : 0.1.0
-      date : 18.11.2016
+      Name : CommEmiter
+      Version : 0.2.0
+      date : 27.12.2016
 */
 
 /*
@@ -20,9 +20,6 @@
  * Etant donné que chaque Comm à un id particulier, il est obligatoire de dire
  * à qui l'on veut envoyer un emit. (emit(who,what[,arg])) (arg est une seule
  * variable)
- *
- * NB : éviter les fonctions anonymes dans les .on, il n'est pas possible de
- *      faire des .off après si elles n'ont pas de nom (à améliorer :) )
  *
  * ENJOY IT ;)
  * Westixy
@@ -54,7 +51,7 @@
  * @param  {string} recive css déterminant la div de réception des données
  * @param  {string} send   css déterminant la div d'envoi des données <small>(ne peuvent pas être les même)</small>
  */
-function CommEmmiter(id,recive,send){
+function CommEmiter(id,recive,send){
   var that=this;
 
   this.css={
@@ -105,7 +102,7 @@ function CommEmmiter(id,recive,send){
    */
   this.on=function(action,callback){
     if(typeof that.actions[action]=="undefined")that.actions[action]=[];
-    if(that.actions[action].indexOf(callback)<0)
+     if(!that.exist(callback))
       that.actions[action].push(callback);
   }
 
@@ -117,10 +114,26 @@ function CommEmmiter(id,recive,send){
    */
   this.off=function(action,callback){
     if(typeof that.actions[action]=="undefined") return;
-    var index = that.actions[action].indexOf(callback);
-    if(index>-1)
+     if(that.exist(callback))
       that.actions[action].splice(index,1);
   }
+
+
+  /**
+   * this.exist - Test si l'action est le callback exist déjà.
+   *
+   * @param  {string} action   Action liée a la fonction
+   * @param  {function} callback fonction liee a l'acrion
+   * @return {boolean}          true si l'ensemble existe déjà, sinon false
+   */
+  this.exist(action,callback){
+    for(var i=0; i<that.actions[action].length;i++){
+      if(that.actions[action][i].toString()===callback.toString())
+        return true;
+    }
+    return false;
+  }
+
 
   this.onRep=function(ev){
     let text=decodeURIComponent(ev.target.innerHTML);
@@ -142,4 +155,4 @@ function CommEmmiter(id,recive,send){
     that.r.addEventListener('DOMSubtreeModified',that.onRep);
   }
 }
-CommEmmiter.version='0.1.0';
+CommEmiter.version='0.2.0';
