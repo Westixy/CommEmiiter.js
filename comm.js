@@ -1,6 +1,6 @@
 /* Created by Esteban Sotillo <westixy@gmail.com>
       Name : CommEmmiter
-      Version : 0.1.1
+      Version : 0.1.0
       date : 18.11.2016
 */
 
@@ -21,6 +21,8 @@
  * à qui l'on veut envoyer un emit. (emit(who,what[,arg])) (arg est une seule
  * variable)
  *
+ * NB : éviter les fonctions anonymes dans les .on, il n'est pas possible de
+ *      faire des .off après si elles n'ont pas de nom (à améliorer :) )
  *
  * ENJOY IT ;)
  * Westixy
@@ -45,6 +47,13 @@
 
 */
 
+/**
+ * CommEmmiter - Objet de communication / evenements sevent a communiquer entre une extention et un page web
+ *
+ * @param  {string} id     identifiant de l'objet (servant d'adresse)
+ * @param  {string} recive css déterminant la div de réception des données
+ * @param  {string} send   css déterminant la div d'envoi des données <small>(ne peuvent pas être les même)</small>
+ */
 function CommEmmiter(id,recive,send){
   var that=this;
 
@@ -55,6 +64,10 @@ function CommEmmiter(id,recive,send){
   this.r=document.querySelector(that.css.r);
   this.s=document.querySelector(that.css.s);
 
+
+  /**
+   * l'identifian de l'objet (servant d'adresse)
+   */
   this.id=id;
 
   this.actions={};
@@ -67,33 +80,51 @@ function CommEmmiter(id,recive,send){
   }
 
 
+
+  /**
+   * this.emit - envoi un événement pour un autre commEmiter avec une ection et des possibles variables
+   *
+   * @param  {string} who  l'id du commEmiter a contacter
+   * @param  {string} action l'action que le commEmiter contacté doit executer
+   * @param  {rainbow} vars   <em>[optionnel]</em> les données a envoyer
+   */
   this.emit=function(who,action,vars){
     that.sample.id=who;
     that.sample.action=action;
     that.sample.vars=(typeof vars!="undefined")?vars:null;
-    that.s.innerHTML=JSON.stringify(that.sample);
+    that.s.innerHTML=encodeURIComponent(JSON.stringify(that.sample));
   }
+
+
+  /**
+   * this.on - permet d'écouter des actions qui serait envoyées par un autre commEmiter <br>
+   * plusieurs appels pour la meme action sont possibles et se feront donc les unes après les autres
+   *
+   * @param  {string} action   nom de l'action auquel l'emiter doit réagir
+   * @param  {function} callback la fonction a executer lorsque un emit est destiné a cet objet et cette action
+   */
   this.on=function(action,callback){
     if(typeof that.actions[action]=="undefined")that.actions[action]=[];
-    if(!that.exist(callback))
+    if(that.actions[action].indexOf(callback)<0)
       that.actions[action].push(callback);
   }
+
+  /**
+   * this.off - désactive l'ecoute des événements fait par this.on
+   *
+   * @param  {string} action nom de l'action auquel l'emiter devait réagir
+   * @param  {function} callback la fonction que devait executer lorsque un emit était destiné a cet objet et cette action
+   */
   this.off=function(action,callback){
     if(typeof that.actions[action]=="undefined") return;
-    if(that.exist(callback))
+    var index = that.actions[action].indexOf(callback);
+    if(index>-1)
       that.actions[action].splice(index,1);
   }
 
-  this.exist(action,callback){
-    for(var i=0; i<that.actions[action].length;i++){
-      if(that.actions[action][i].toString()===callback.toString())
-        return true;
-    }
-    return false;
-  }
-
   this.onRep=function(ev){
-    var d = JSON.parse(ev.target.innerHTML);
+    let text=decodeURIComponent(ev.target.innerHTML);
+    var d = JSON.parse(text);
     if(d.id!=that.id) return;
     if(typeof that.actions[d.action]=="undefined") return;
     for(var i=0 ; i<that.actions[d.action].length ; i++){
@@ -101,10 +132,14 @@ function CommEmmiter(id,recive,send){
     }
   }
 
+
+  /**
+   * this.init - initialise l'écoute sur les div de réceptions et d'envoi.
+   */
   this.init=function(){
     that.r=document.querySelector(that.css.r);
     that.s=document.querySelector(that.css.s);
     that.r.addEventListener('DOMSubtreeModified',that.onRep);
   }
 }
-CommEmmiter.version='0.1.1';
+CommEmmiter.version='0.1.0';
